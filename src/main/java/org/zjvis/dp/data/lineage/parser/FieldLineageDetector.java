@@ -20,11 +20,14 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.zjvis.dp.data.lineage.data.ColumnDTO;
+import org.zjvis.dp.data.lineage.data.ColumnInfo;
+import org.zjvis.dp.data.lineage.data.DatabaseConfig;
 import org.zjvis.dp.data.lineage.data.FieldInfo;
 import org.zjvis.dp.data.lineage.data.FieldLineageInfo;
 import org.zjvis.dp.data.lineage.data.SelectLevelInfo;
 import org.zjvis.dp.data.lineage.data.TableInfo;
+import org.zjvis.dp.data.lineage.enums.SQLType;
+import org.zjvis.dp.data.lineage.exception.DataLineageException;
 import org.zjvis.dp.data.lineage.parser.ast.ColumnIdentifier;
 import org.zjvis.dp.data.lineage.parser.ast.FromClause;
 import org.zjvis.dp.data.lineage.parser.ast.Identifier;
@@ -38,7 +41,9 @@ import org.zjvis.dp.data.lineage.parser.ast.expr.ColumnExpr;
 import org.zjvis.dp.data.lineage.parser.ast.expr.IdentifierColumnExpr;
 import org.zjvis.dp.data.lineage.parser.ast.expr.JoinExpr;
 import org.zjvis.dp.data.lineage.parser.ast.expr.TableExpr;
-import org.zjvis.dp.data.lineage.parser.database.LocalClickhouseService;
+import org.zjvis.dp.data.lineage.parser.database.ClickhouseService;
+import org.zjvis.dp.data.lineage.parser.database.DatabaseFactory;
+import org.zjvis.dp.data.lineage.parser.database.DatabaseService;
 import org.zjvis.dp.data.lineage.util.ApplicationContextGetBeanHelper;
 import org.zjvis.dp.data.lineage.util.DataLineageUtil;
 
@@ -101,8 +106,14 @@ public class FieldLineageDetector extends AstVisitor<Object> {
 
     private String defaultDatabase;
 
-    FieldLineageDetector(String defaultDatabase) {
-        this.defaultDatabase = defaultDatabase;
+    private DatabaseConfig databaseConfig;
+
+    private String sqlType;
+
+    FieldLineageDetector(DatabaseConfig databaseConfig, String sqlType) {
+        this.defaultDatabase = databaseConfig.getDatabaseName();
+        this.databaseConfig = databaseConfig;
+        this.sqlType = sqlType;
     }
 
     private final Cache<String, List<String>> fieldInfoCache = CacheBuilder.newBuilder()
@@ -112,15 +123,20 @@ public class FieldLineageDetector extends AstVisitor<Object> {
 
 
     public List<String> getFieldFromDatabase(TableInfo tableInfo) {
-        LocalClickhouseService localClickhouseService = ApplicationContextGetBeanHelper.getBean(LocalClickhouseService.class);
-        List<ColumnDTO> columnDTOList =
-                localClickhouseService.getAllFields(tableInfo.getDatabaseName(), tableInfo.getTableName());
-        if(CollectionUtils.isEmpty(columnDTOList)) {
+        DatabaseFactory databaseFactory = ApplicationContextGetBeanHelper.getBean(DatabaseFactory.class);
+        DatabaseService databaseService = databaseFactory.createDatabaseService(sqlType);
+        List<ColumnInfo> columnInfoList = databaseService.getAllFields(
+                databaseConfig,
+                tableInfo.getDatabaseName(),
+                tableInfo.getTableName()
+        );
+
+        if(CollectionUtils.isEmpty(columnInfoList)) {
             return Lists.newArrayList();
         }
 
-        return columnDTOList.stream()
-                .map(ColumnDTO::getColumnName)
+        return columnInfoList.stream()
+                .map(ColumnInfo::getColumnName)
                 .collect(Collectors.toList());
     }
 
@@ -454,6 +470,10 @@ public class FieldLineageDetector extends AstVisitor<Object> {
                                     .tableInfo(toTableInfo)
                                     .build())
                     .collect(Collectors.toList());
+        }
+
+        if(CollectionUtils.isEmpty(toColumnList)) {
+            throw new DataLineageException("insert statement must specify column list or database information");
         }
 
         List<FieldLineageInfo> fieldLineageInfoList = Lists.newArrayList();

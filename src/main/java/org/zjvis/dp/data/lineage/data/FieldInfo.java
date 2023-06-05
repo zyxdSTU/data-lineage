@@ -70,6 +70,18 @@ public class FieldInfo {
         return result;
     }
 
+    public String getReallyName() {
+        String result = "";
+        if(!TableInfo.isNull(tableInfo)) {
+            if(StringUtils.isNotEmpty(tableInfo.getDatabaseName())) {
+                result += tableInfo.getDatabaseName() + ".";
+            }
+            result += tableInfo.getTableName() + ".";
+        }
+        result += fieldName;
+        return result;
+    }
+
 
     public static FieldInfo copy(FieldInfo fieldInfo) {
         return FieldInfo.builder()

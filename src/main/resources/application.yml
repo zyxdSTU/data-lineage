@@ -1,0 +1,9 @@
+server:
+  port: 9299
+
+clickhouse:
+  url: jdbc:clickhouse://10.5.24.18:8124/default
+  host: 10.5.24.18
+  port: 8124
+  user: bigdata
+  password: a123456

@@ -1062,7 +1062,8 @@ public class MySqlVisitor extends MySqlParserBaseVisitor{
     @Override
     public Object visitDottedId(DottedIdContext ctx) {
         if(null != ctx.DOT_ID()) {
-            return new Identifier(((String)visit(ctx.DOT_ID())).substring(1));
+            Identifier identifier = (Identifier)visit(ctx.DOT_ID());
+            return new Identifier(identifier.getName().substring(1));
         }
         return null;
     }

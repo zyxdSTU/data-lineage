@@ -5,10 +5,11 @@ import java.util.List;
 import java.util.Objects;
 import javax.annotation.Resource;
 import org.springframework.stereotype.Component;
+import org.zjvis.dp.data.lineage.data.DatabaseConfig;
 import org.zjvis.dp.data.lineage.data.FieldLineageInfo;
 import org.zjvis.dp.data.lineage.data.TableInfo;
 import org.zjvis.dp.data.lineage.data.TableLineageInfo;
-import org.zjvis.dp.data.lineage.exception.CommonException;
+import org.zjvis.dp.data.lineage.exception.DataLineageException;
 import org.zjvis.dp.data.lineage.parser.ast.CreateTableQuery;
 import org.zjvis.dp.data.lineage.parser.ast.DataClause.ClauseType;
 import org.zjvis.dp.data.lineage.parser.ast.INode;
@@ -27,14 +28,14 @@ public class DataLineageParser {
     @Resource
     private AstParserFactory astParserFactory;
 
-    public List<FieldLineageInfo> processFieldLineageParse(String sqlType, String sql, String defaultDatabase) {
+    public List<FieldLineageInfo> processFieldLineageParse(String sqlType, String sql, DatabaseConfig databaseConfig) {
         InsertQuery insertQuery = getInsertQuery(sqlType, sql);
 
         if(null == insertQuery) {
             return null;
         }
 
-        FieldLineageDetector fieldLineageDetector = new FieldLineageDetector(defaultDatabase);
+        FieldLineageDetector fieldLineageDetector = new FieldLineageDetector(databaseConfig, sqlType);
 
         //遍历节点
         fieldLineageDetector.visit(insertQuery);
@@ -120,7 +121,7 @@ public class DataLineageParser {
             astParserFactory.createAstParser(sqlType).parse(sql);
         } catch (Exception e) {
             //todo 后面优化exception
-            throw new CommonException("SQL_GRAMMAR_ERROR");
+            throw new DataLineageException("SQL_GRAMMAR_ERROR");
         }
     }
 

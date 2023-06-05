@@ -8,20 +8,24 @@ import lombok.Getter;
  * @create 2022/1/6
  */
 @Getter
-public class CommonException extends RuntimeException {
+public class DataLineageException extends RuntimeException {
 
     private static final long serialVersionUID = 4465566270019332160L;
 
+    public DataLineageException() {
+        super();
+    }
 
-    public CommonException(String message) {
+
+    public DataLineageException(String message) {
         super(message);
     }
 
-    public CommonException(String message, Throwable cause) {
+    public DataLineageException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public CommonException(Throwable cause) {
+    public DataLineageException(Throwable cause) {
         super(cause);
     }
 }

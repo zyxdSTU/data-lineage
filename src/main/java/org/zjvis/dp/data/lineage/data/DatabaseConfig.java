@@ -1,27 +1,27 @@
 package org.zjvis.dp.data.lineage.data;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
-public class DBConfig {
+@AllArgsConstructor
+public class DatabaseConfig {
 
     private String host;
 
     private Integer port;
 
-
     private String username;
-
 
     private String password;
 
-
     private String databaseName;
 
-    private String oracleConnectionType;
+    private String schemaName;
 
+    private Integer loginTimeout;
 }

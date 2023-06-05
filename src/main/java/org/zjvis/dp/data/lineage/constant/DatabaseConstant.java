@@ -36,28 +36,19 @@ public class DatabaseConstant {
             + "from information_schema.columns "
             + "where table_schema='%s' and table_name='%s';";
 
-    public static final String isTableExistSqlFormat = "select "
+    public static final String mysqlIsTableExistSqlFormat = "select "
+            + "table_name, "
+            + "table_type, "
+            + "engine "
+            + "FROM information_schema.tables "
+            + "WHERE TABLE_SCHEMA = '%s' and TABLE_NAME = '%s';";
+
+    public static final String clickhouseIsTableExistSqlFormat = "select "
             + "database, "
             + "name "
             + "from system.tables "
             + "where database = '%s' "
             + "and name = '%s' ";
-
-    // %s=databaseName、%s=tableName  concat(round(sum(DATA_LENGTH/1024/1024), 4),' mb')
-    public static final String mysqlInfoSqlFormat = "select UPDATE_TIME AS last_modified, TABLE_ROWS AS total_rows, (DATA_LENGTH+INDEX_LENGTH) AS total_size " +
-            "from information_schema.TABLES where TABLE_SCHEMA='%s' and TABLE_NAME='%s';";
-
-    /**
-     * 支持MySQL、Postgre、Clickhouse
-     * 注：postgre不支持``
-     */
-    public static final String getDataSqlFormat = "select %s from %s limit %s;";
-
-    /**
-     * 选取所有数据
-     */
-    public static final Integer noLimit = -1;
-    public static final String getDataNoLimitSqlFormat = "select %s from %s;";
 
 
     /**
@@ -86,9 +77,6 @@ public class DatabaseConstant {
             + "INNER JOIN pg_namespace namesp ON cla.relnamespace = namesp.oid "
             + "where cla.relname = '%s' AND namesp.nspname = '%s' AND attr.attnum > 0;";
 
-    public static final String postgreInfoSqlFormat = "select n_live_tup as total_rows, pg_table_size(pgc.oid) AS total_size from pg_class pgc " +
-            "LEFT JOIN pg_stat_user_tables pgs on pgc.oid=pgs.relid " +
-            "where pgc.relname = '%s';";
 
     /**
      * Clickhouse DDL
@@ -100,53 +88,6 @@ public class DatabaseConstant {
     public static final String clickhouseAllDatabaseSql = "show databases";
 
     public static final String clickhouseAllTableSql = "show tables";
-
-    public static final String clickhouseCreateDatabaseSql = "create database if not exists %s ON CLUSTER cluster01";
-
-    public static final String systemDatabase = "system";
-
-    public static final String clickhouseInfoSqlFormat = "select "
-            + "sum(bytes) as total_size, "
-            + "sum(rows) as total_rows, "
-            + "max(modification_time) as last_modified "
-            + "from remote('%s:%d', 'system', 'parts', '%s', '%s') "
-            + "where database = '%s' and table = '%s' "
-            + "and active;";
-
-    public static final String clickhouseAsynchronousInfoSqlFormat = "select "
-            + "metric, "
-            + "value "
-            + "from remote('%s:%d', 'system', 'asynchronous_metrics', '%s', '%s') "
-            + "where metric in ('MemoryResident','MemoryShared','MemoryVirtual','NumberOfDatabases','NumberOfTables','Uptime');";
-
-    public static final String clickhousMetricsInfoSqlFormat = "select "
-            + "metric, "
-            + "value "
-            + "from remote('%s:%d', 'system', 'metrics', '%s', '%s') "
-            + "where metric in ('Query','HTTPConnection','QueryThread','MemoryTracking');";
-
-    public static final String clickhouseInfoSqlFormatNoRemote = "select "
-            + "sum(bytes) as total_size, "
-            + "sum(rows) as total_rows, "
-            + "max(modification_time) as last_modified "
-            + "from `system`.parts "
-            + "where database = '%s' and table = '%s'; ";
-
-    public static final String getClickhouseClusterInfoSql = "select "
-            + "shard_num as shardNumber, "
-            + "host_address as host, "
-            + "port as port "
-            + "from `clusters`; ";
-
-    // ddl语句
-    public static final String clickhouseDDLSqlFormat = "show create table %s;";
-
-    // select语句
-    public static final String clickhouseSelectSqlFormat = "select \n\t %s \n from %s.%s;";
-
-    // 统计app调用次数
-    public static final String clickhouseCountAppAccessNumSql = "select count(*) as call_num from dp.api_access_record where app_id = %s;";
-
 
     /**
      *  Oracle DDL
@@ -168,15 +109,6 @@ public class DatabaseConstant {
             "from dba_tab_columns a LEFT JOIN dba_col_comments b ON a.OWNER = b.OWNER AND a.TABLE_NAME = b.TABLE_NAME " +
             "AND a.COLUMN_NAME = b.COLUMN_NAME " +
             "WHERE a.owner = '%s' AND a.table_name = '%s'";
-
-    // 注：oracle jdbc查询需要带上双引号, 字段和表名
-    public static final String oracleDataSqlFormat = "select %s from \"%s\".\"%s\" where rownum <= %s";
-
-    public static final String oracleInfoSqlFormat = "select " +
-            "o.LAST_DDL_TIME as last_modified, t.num_rows as total_rows, s.bytes as total_size\n" +
-            "from dba_objects o left join dba_segments s on s.segment_name=o.object_name\n" +
-            "left join dba_tables t on t.table_name=o.object_name\n" +
-            "where o.OWNER = '%s' and o.object_name='%s'";
 
     /**
      * Sql server DDL
@@ -205,15 +137,5 @@ public class DatabaseConstant {
             "LEFT JOIN sys.extended_properties se on se.major_id=so.object_id and se.minor_id=sc.column_id\n" +
             "where so.name='%s';";
 
-    public static final String sqlServerDataSqlFormat = "select top %s %s from %s;";
-
-    // 注：总大小需*8转化成kb计算
-    // todo check
-    public static final String sqlServerInfoSqlFormat = "select o.refdate as last_modified, p.rows as total_rows, (a.used_pages*8*1024) as total_size \n" +
-            "from SysObjects o \n" +
-            "INNER join SysIndexes as b ON o.id=b.id \n" +
-            "INNER JOIN sys.partitions p on o.id=p.object_id \n" +
-            "INNER JOIN sys.allocation_units a on p.partition_id = a.container_id \n" +
-            "where o.XType='u' and p.index_id=1 and b.indid in(0,1) and o.name = '%s';";
-
+    public static final Integer DEFAULT_LOGIN_TIME_OUT = 5;
 }
