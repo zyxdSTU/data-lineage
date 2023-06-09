@@ -17,7 +17,7 @@ public class ClickhouseService extends RDMSService {
     }
 
     @Override
-    public String getUrlWithoutDatabase() {
+    public String getUrlFormatWithoutDatabase() {
         return DatabaseConstant.clickhouseUrlWithoutDbNameFormat;
     }
 

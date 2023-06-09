@@ -30,9 +30,7 @@ class LineageApplicationTests {
                 + "select \n"
                 + "    student.student_id,\n"
                 + "    student.student_name,\n"
-                + "    school.school_id,\n"
-                + "    school.school_name,\n"
-                + "    school.school_tel\n"
+                + "    school.* \n"
                 + "from student\n"
                 + "join school\n"
                 + "on student.school_id = school.school_id;";

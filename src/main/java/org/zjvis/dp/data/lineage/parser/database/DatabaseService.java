@@ -20,7 +20,7 @@ public interface DatabaseService {
 
     String getUrlFormat();
 
-    String getUrlWithoutDatabase();
+    String getUrlFormatWithoutDatabase();
 
     String constructCompleteUrl(DatabaseConfig databaseConfig);
 

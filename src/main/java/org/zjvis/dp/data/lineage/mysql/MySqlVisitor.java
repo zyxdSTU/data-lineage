@@ -399,7 +399,7 @@ public class MySqlVisitor extends MySqlParserBaseVisitor{
      */
     @Override
     public Object visitSelectStarElement(SelectStarElementContext ctx) {
-        String[] strArr = ((String)visit(ctx.fullId())).split("\\.");
+        String[] strArr = ((Identifier)visit(ctx.fullId())).getName().split("\\.");
         TableIdentifier tableIdentifier;
         if(strArr.length == 1) {
             tableIdentifier = new TableIdentifier(null, new Identifier(strArr[0]));

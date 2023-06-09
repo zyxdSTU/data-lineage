@@ -138,7 +138,7 @@ public abstract class RDMSService implements DatabaseService {
             );
         } else {
             result = String.format(
-                    getUrlWithoutDatabase(),
+                    getUrlFormatWithoutDatabase(),
                     databaseConfig.getHost(),
                     databaseConfig.getPort()
             );
