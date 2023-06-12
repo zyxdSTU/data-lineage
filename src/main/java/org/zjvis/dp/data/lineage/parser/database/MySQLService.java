@@ -8,7 +8,7 @@ import org.zjvis.dp.data.lineage.enums.SQLType;
  * @author zhouyu
  * @create 2023-06-05 16:46
  */
-@Component
+@Component("dataLineageMySQLService")
 public class MySQLService extends RDMSService{
     @Override
     public String getUrlFormat() {

@@ -1,0 +1,9 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.zjvis.dp.data.lineage.parser.DataLineageParser,\
+org.zjvis.dp.data.lineage.parser.AstParserFactory,\
+org.zjvis.dp.data.lineage.clickhouse.ClickhouseAstParser,\
+org.zjvis.dp.data.lineage.mysql.MysqlAstParser,\
+org.zjvis.dp.data.lineage.util.ApplicationContextGetBeanHelper,\
+org.zjvis.dp.data.lineage.parser.database.ClickhouseService, \
+org.zjvis.dp.data.lineage.parser.database.MySQLService,\
+org.zjvis.dp.data.lineage.parser.database.DatabaseFactory

@@ -1,6 +1,7 @@
 package org.zjvis.dp.data.lineage.parser;
 
 
+import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Resource;
@@ -9,6 +10,7 @@ import org.zjvis.dp.data.lineage.data.DatabaseConfig;
 import org.zjvis.dp.data.lineage.data.FieldLineageInfo;
 import org.zjvis.dp.data.lineage.data.TableInfo;
 import org.zjvis.dp.data.lineage.data.TableLineageInfo;
+import org.zjvis.dp.data.lineage.enums.SQLType;
 import org.zjvis.dp.data.lineage.exception.DataLineageException;
 import org.zjvis.dp.data.lineage.parser.ast.CreateTableQuery;
 import org.zjvis.dp.data.lineage.parser.ast.DataClause.ClauseType;
@@ -143,4 +145,13 @@ public class DataLineageParser {
         }
         return tableInfo;
     }
+
+    public List<TableInfo> getAllRelateTable(String sql, String defaultDatabase) {
+        TableLineageInfo tableLineageInfo = processTableLineageParse(SQLType.CLICKHOUSE.name(), sql, defaultDatabase);
+        if(Objects.isNull(tableLineageInfo)) {
+            return Lists.newArrayList();
+        }
+        return tableLineageInfo.getSourceTables();
+    }
+
 }

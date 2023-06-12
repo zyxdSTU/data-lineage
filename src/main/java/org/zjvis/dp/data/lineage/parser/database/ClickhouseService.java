@@ -8,7 +8,7 @@ import org.zjvis.dp.data.lineage.enums.SQLType;
  * @author zhouyu
  * @create 2023-03-07 16:55
  */
-@Component
+@Component("dataLineageClickhouseService")
 public class ClickhouseService extends RDMSService {
 
     @Override
