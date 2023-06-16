@@ -28,8 +28,8 @@ class LineageApplicationTests {
     void testMysql() {
         String sql = "insert into student_school\n"
                 + "select \n"
-                + "    student.student_id,\n"
-                + "    concat(student.student_name, school.school_name), \n"
+                + "    student.student_id + school.school_id,\n"
+                + "    substr(student.student_name, school.school_name), \n"
                 + "    school.* \n"
                 + "from student\n"
                 + "join school\n"

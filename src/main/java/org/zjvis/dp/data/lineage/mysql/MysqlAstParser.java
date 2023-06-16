@@ -18,6 +18,7 @@ import org.zjvis.dp.data.lineage.parser.ast.INode;
  */
 @Component
 public class MysqlAstParser implements AstParser {
+
     @Override
     public String getSQLType() {
         return SQLType.MYSQL.name();
@@ -33,9 +34,9 @@ public class MysqlAstParser implements AstParser {
             MySqlParser mySqlParser = new MySqlParser(tokens);
             RootContext rootContext = mySqlParser.root();
             // Notice: ckParser.queryStmt() can only be called once as it reads data from stream
-            Object result = new MySqlVisitor().visit(rootContext);
+            Object result = new MySqlCoreVisitor().visit(rootContext);
 
-            if(null == result) {
+            if (null == result) {
                 return null;
             } else {
                 return (INode) result;

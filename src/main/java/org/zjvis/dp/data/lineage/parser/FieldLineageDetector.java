@@ -660,6 +660,12 @@ public class FieldLineageDetector extends AstVisitor<Object> {
                             if(CollectionUtils.isNotEmpty(fieldList) && !fieldList.contains(subElement.getFieldName())) {
                                 continue;
                             }
+
+                            if(!TableInfo.isNull(subElement.getTableInfo())) {
+                                if(!subElement.getTableInfo().getTableName().equals(selectLevelInfo.getFromTable().getTableName())) {
+                                    continue;
+                                }
+                            }
                             sourceFieldInfoList.add(FieldInfo.builder()
                                     .fieldName(subElement.getFieldName())
                                     .tableInfo(selectLevelInfo.getFromTable())

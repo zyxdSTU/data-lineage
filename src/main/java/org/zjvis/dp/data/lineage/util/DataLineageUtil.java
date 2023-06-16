@@ -1,10 +1,14 @@
 package org.zjvis.dp.data.lineage.util;
 
+import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import org.apache.commons.lang3.StringUtils;
+import org.zjvis.dp.data.lineage.exception.DataLineageException;
 
 /**
  * @author zhouyu
@@ -44,5 +48,20 @@ public class DataLineageUtil {
         }
 
         return false;
+    }
+
+
+    public static <T> List<T> castList(Object obj, Class<T> clazz) {
+        List<T> result = Lists.newArrayList();
+        if(obj instanceof List<?>)
+        {
+            for (Object o : (List<?>) obj)
+            {
+                result.add(clazz.cast(o));
+            }
+            return result;
+        } else {
+            throw  new DataLineageException("cast type failed, pls check");
+        }
     }
 }
