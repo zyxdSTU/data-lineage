@@ -8,6 +8,9 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.collections.CollectionUtils;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.AtomTableItemContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.BitExpressionAtomContext;
+import org.zjvis.dp.data.lineage.mysql.MySqlParser.BooleanLiteralContext;
+import org.zjvis.dp.data.lineage.mysql.MySqlParser.ConstantContext;
+import org.zjvis.dp.data.lineage.mysql.MySqlParser.DecimalLiteralContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.DottedIdContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.ExpressionAtomPredicateContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.ExtractFunctionCallContext;
@@ -16,6 +19,9 @@ import org.zjvis.dp.data.lineage.mysql.MySqlParser.FullColumnNameContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.FullColumnNameExpressionAtomContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.FullColumnNameListContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.FullIdContext;
+import org.zjvis.dp.data.lineage.mysql.MySqlParser.FunctionArgsContext;
+import org.zjvis.dp.data.lineage.mysql.MySqlParser.FunctionNameBaseContext;
+import org.zjvis.dp.data.lineage.mysql.MySqlParser.HexadecimalLiteralContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.InnerJoinContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.InsertStatementContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.InsertStatementValueContext;
@@ -35,6 +41,8 @@ import org.zjvis.dp.data.lineage.mysql.MySqlParser.QueryExpressionNointoContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.QuerySpecificationContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.QuerySpecificationNointoContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.RootContext;
+import org.zjvis.dp.data.lineage.mysql.MySqlParser.ScalarFunctionCallContext;
+import org.zjvis.dp.data.lineage.mysql.MySqlParser.ScalarFunctionNameContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.SelectColumnElementContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.SelectElementsContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.SelectExpressionElementContext;
@@ -503,6 +511,25 @@ public class MySqlVisitor extends MySqlParserBaseVisitor{
         return ColumnExpr.createFunction(nameIdentifier, null,args);
     }
 
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The default implementation returns the result of calling
+     * {@link #visitChildren} on {@code ctx}.</p>
+     *
+     * @param ctx
+     */
+    @Override
+    public Object visitScalarFunctionCall(ScalarFunctionCallContext ctx) {
+        Identifier functionName = (Identifier)visit(ctx.scalarFunctionName());
+        List<ColumnExpr> args = null;
+        if(null != ctx.functionArgs()) {
+            args = (List<ColumnExpr>)visit(ctx.functionArgs());
+        }
+        return ColumnExpr.createFunction(functionName, null, args);
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -859,6 +886,51 @@ public class MySqlVisitor extends MySqlParserBaseVisitor{
         return leftJoinExpr;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The default implementation returns the result of calling
+     * {@link #visitChildren} on {@code ctx}.</p>
+     *
+     * @param ctx
+     */
+    @Override
+    public Object visitFunctionArgs(FunctionArgsContext ctx) {
+        List<ColumnExpr> result = Lists.newArrayList();
+        if(CollectionUtils.isNotEmpty(ctx.fullColumnName())) {
+            result.addAll(
+                    ctx.fullColumnName().stream()
+                            .map(this::visit)
+                            .map(element -> (ColumnIdentifier) element)
+                            .map(ColumnExpr::createIdentifier)
+                            .collect(Collectors.toList())
+            );
+        }
+
+        if(CollectionUtils.isNotEmpty(ctx.functionCall())) {
+            result.addAll(
+                    ctx.functionCall().stream()
+                            .map(this::visit)
+                            .map(element -> (FunctionColumnExpr) element)
+                            .map(FunctionColumnExpr::getArgs)
+                            .flatMap(Collection::stream)
+                            .collect(Collectors.toList())
+            );
+        }
+
+        if(CollectionUtils.isNotEmpty(ctx.expression())) {
+            result.addAll(
+                    ctx.expression().stream()
+                            .map(this::visit)
+                            .map(element -> (List<ColumnIdentifier>) element)
+                            .flatMap(Collection::stream)
+                            .map(ColumnExpr::createIdentifier)
+                            .collect(Collectors.toList())
+            );
+        }
+
+        return CollectionUtils.isEmpty(result) ? null : result;
+    }
 
     /**
      * {@inheritDoc}
@@ -953,6 +1025,124 @@ public class MySqlVisitor extends MySqlParserBaseVisitor{
     }
 
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The default implementation returns the result of calling
+     * {@link #visitChildren} on {@code ctx}.</p>
+     *
+     * @param ctx
+     */
+    @Override
+    public Object visitScalarFunctionName(ScalarFunctionNameContext ctx) {
+        if(null != ctx.ASCII()) {
+            return visit(ctx.ASCII());
+        }
+
+        if(null != ctx.CURDATE()) {
+            return visit(ctx.CURDATE());
+        }
+
+        if(null != ctx.CURRENT_DATE()) {
+            return visit(ctx.CURRENT_DATE());
+        }
+
+        if(null != ctx.CURRENT_TIME()) {
+            return visit(ctx.CURRENT_TIME());
+        }
+
+        if(null != ctx.CURRENT_TIMESTAMP()) {
+            return visit(ctx.CURRENT_TIMESTAMP());
+        }
+
+        if(null != ctx.CURTIME()) {
+            return visit(ctx.CURTIME());
+        }
+
+        if(null != ctx.DATE_ADD()) {
+            return visit(ctx.DATE_ADD());
+        }
+
+        if(null != ctx.DATE_SUB()) {
+            return visit(ctx.DATE_SUB());
+        }
+
+        if(null != ctx.IF()) {
+            return visit(ctx.IF());
+        }
+
+        if(null != ctx.INSERT()) {
+            return visit(ctx.INSERT());
+        }
+
+        if(null != ctx.LOCALTIME()) {
+            return visit(ctx.LOCALTIME());
+        }
+
+        if(null != ctx.LOCALTIMESTAMP()) {
+            return visit(ctx.LOCALTIMESTAMP());
+        }
+
+        if(null != ctx.MID()) {
+            return visit(ctx.MID());
+        }
+
+        if(null != ctx.NOW()) {
+            return visit(ctx.NOW());
+        }
+
+        if(null != ctx.REPLACE()) {
+            return ctx.REPLACE();
+        }
+
+        if(null != ctx.SUBSTR()) {
+            return ctx.SUBSTR();
+        }
+
+        if(null != ctx.SUBSTRING()) {
+            return ctx.SUBSTRING();
+        }
+
+        if(null != ctx.SYSDATE()) {
+            return ctx.SYSDATE();
+        }
+
+        if(null != ctx.TRIM()) {
+            return ctx.TRIM();
+        }
+
+        if(null != ctx.UTC_DATE()) {
+            return ctx.UTC_DATE();
+        }
+
+        if(null != ctx.UTC_TIME()) {
+            return ctx.UTC_TIME();
+        }
+
+        if(null != ctx.UTC_TIMESTAMP()) {
+            return ctx.UTC_TIMESTAMP();
+        }
+
+        if(null != ctx.functionNameBase()) {
+            return visit(ctx.functionNameBase());
+        }
+
+        return null;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The default implementation returns the result of calling
+     * {@link #visitChildren} on {@code ctx}.</p>
+     *
+     * @param ctx
+     */
+    @Override
+    public Object visitFunctionNameBase(FunctionNameBaseContext ctx) {
+        return super.visitFunctionNameBase(ctx);
+    }
 
     /**
      * {@inheritDoc}
@@ -966,6 +1156,82 @@ public class MySqlVisitor extends MySqlParserBaseVisitor{
     public Object visitStringLiteral(StringLiteralContext ctx) {
         //todo 默认返回第一个，后面修改
         return visit(ctx.STRING_LITERAL(0));
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The default implementation returns the result of calling
+     * {@link #visitChildren} on {@code ctx}.</p>
+     *
+     * @param ctx
+     */
+    @Override
+    public Object visitBooleanLiteral(BooleanLiteralContext ctx) {
+        if(null != ctx.TRUE()) {
+            return visit(ctx.TRUE());
+        }
+
+        if(null != ctx.FALSE()) {
+            return visit(ctx.FALSE());
+        }
+
+        return null;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The default implementation returns the result of calling
+     * {@link #visitChildren} on {@code ctx}.</p>
+     *
+     * @param ctx
+     */
+    @Override
+    public Object visitDecimalLiteral(DecimalLiteralContext ctx) {
+        if(null != ctx.DECIMAL_LITERAL()) {
+            return visit(ctx.DECIMAL_LITERAL());
+        }
+
+        if(null != ctx.ZERO_DECIMAL()) {
+            return visit(ctx.ZERO_DECIMAL());
+        }
+
+        if(null != ctx.ONE_DECIMAL()) {
+            return visit(ctx.ONE_DECIMAL());
+        }
+
+        if(null != ctx.TWO_DECIMAL()) {
+            return visit(ctx.TWO_DECIMAL());
+        }
+
+        if(null != ctx.REAL_LITERAL()) {
+            return visit(ctx.REAL_LITERAL());
+        }
+
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The default implementation returns the result of calling
+     * {@link #visitChildren} on {@code ctx}.</p>
+     *
+     * @param ctx
+     */
+    @Override
+    public Object visitHexadecimalLiteral(HexadecimalLiteralContext ctx) {
+        if(null != ctx.HEXADECIMAL_LITERAL()) {
+            return visit(ctx.HEXADECIMAL_LITERAL());
+        }
+
+        if(null != ctx.STRING_CHARSET_NAME()) {
+            return visit(ctx.STRING_CHARSET_NAME());
+        }
+
+        return null;
     }
 
     /**
@@ -1082,4 +1348,48 @@ public class MySqlVisitor extends MySqlParserBaseVisitor{
     }
 
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The default implementation returns the result of calling
+     * {@link #visitChildren} on {@code ctx}.</p>
+     *
+     * @param ctx
+     */
+    @Override
+    public Object visitConstant(ConstantContext ctx) {
+        if(null != ctx.stringLiteral()) {
+            return visit(ctx.stringLiteral());
+        }
+
+        if(null != ctx.decimalLiteral()) {
+            return visit(ctx.decimalLiteral());
+        }
+
+        if(null != ctx.hexadecimalLiteral()) {
+            return visit(ctx.hexadecimalLiteral());
+        }
+
+        if(null != ctx.booleanLiteral()) {
+            return visit(ctx.booleanLiteral());
+        }
+
+        if(null != ctx.REAL_LITERAL()) {
+            return visit(ctx.REAL_LITERAL());
+        }
+
+        if(null != ctx.BIT_STRING()) {
+            return visit(ctx.BIT_STRING());
+        }
+
+        if(null != ctx.NULL_LITERAL()) {
+            return visit(ctx.NULL_LITERAL());
+        }
+
+        if(null != ctx.NULL_SPEC_LITERAL()) {
+            return visit(ctx.NULL_SPEC_LITERAL());
+        }
+
+        return null;
+    }
 }

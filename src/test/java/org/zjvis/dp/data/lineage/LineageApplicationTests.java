@@ -29,7 +29,7 @@ class LineageApplicationTests {
         String sql = "insert into student_school\n"
                 + "select \n"
                 + "    student.student_id,\n"
-                + "    student.student_name,\n"
+                + "    concat(student.student_name, school.school_name), \n"
                 + "    school.* \n"
                 + "from student\n"
                 + "join school\n"
