@@ -35,4 +35,9 @@ public class ClickhouseService extends RDMSService {
     public String getDatabaseType() {
         return SQLType.CLICKHOUSE.name();
     }
+
+    @Override
+    public String getAllDatabaseSqlFormat() {
+        return DatabaseConstant.clickhouseAllDatabaseSql;
+    }
 }

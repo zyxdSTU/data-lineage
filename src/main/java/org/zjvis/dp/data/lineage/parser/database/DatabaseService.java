@@ -16,6 +16,8 @@ public interface DatabaseService {
 
     Connection getConnection(DatabaseConfig databaseConfig);
 
+    void connectionTest(DatabaseConfig databaseConfig);
+
     JSONArray executeSQL(Connection connection, String sql);
 
     String getUrlFormat();
@@ -26,7 +28,19 @@ public interface DatabaseService {
 
     String getAllFieldSqlFormat();
 
+    String getAllDatabaseSqlFormat();
+
     String getIsTableExistSqlFormat();
 
     String getDatabaseType();
+
+    List<String> getAllDatabase(DatabaseConfig databaseConfig);
+
+    /***
+     * 说明：目前只有postgres有schemaName
+     * @param databaseConfig
+     * @param databaseName
+     * @return
+     */
+    List<String> getAllSchema(DatabaseConfig databaseConfig, String databaseName);
 }

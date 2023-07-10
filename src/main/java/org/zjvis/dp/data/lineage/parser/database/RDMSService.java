@@ -19,8 +19,10 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.zjvis.dp.data.lineage.constant.DatabaseConstant;
 import org.zjvis.dp.data.lineage.data.ColumnInfo;
 import org.zjvis.dp.data.lineage.data.DatabaseConfig;
+import org.zjvis.dp.data.lineage.data.DatabaseNameInfo;
 import org.zjvis.dp.data.lineage.exception.DataLineageException;
 
 /**
@@ -144,5 +146,26 @@ public abstract class RDMSService implements DatabaseService {
             );
         }
         return result;
+    }
+
+    @Override
+    public void connectionTest(DatabaseConfig databaseConfig) {
+        Connection connection  = getConnection(databaseConfig);
+        DbUtils.closeQuietly(connection);
+    }
+
+    @Override
+    public List<String> getAllDatabase(DatabaseConfig databaseConfig) {
+        Connection connection = getConnection(databaseConfig);
+        JSONArray jsonArray = executeSQL(connection, getAllDatabaseSqlFormat());
+        List<DatabaseNameInfo> databaseNameInfos = JSON.parseArray(jsonArray.toJSONString(), DatabaseNameInfo.class);
+        return databaseNameInfos.stream()
+                .map(DatabaseNameInfo::getSpecificDatabaseName)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<String> getAllSchema(DatabaseConfig databaseConfig, String databaseName) {
+        return null;
     }
 }

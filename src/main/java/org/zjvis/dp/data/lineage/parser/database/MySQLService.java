@@ -34,4 +34,10 @@ public class MySQLService extends RDMSService{
     public String getDatabaseType() {
         return SQLType.MYSQL.name();
     }
+
+    @Override
+    public String getAllDatabaseSqlFormat() {
+        return DatabaseConstant.mysqlAllDatabaseSql;
+    }
+
 }
