@@ -5,13 +5,17 @@ import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Resource;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.zjvis.dp.data.lineage.data.DatabaseConfig;
 import org.zjvis.dp.data.lineage.data.FieldLineageInfo;
+import org.zjvis.dp.data.lineage.data.TableChangeInfo;
 import org.zjvis.dp.data.lineage.data.TableInfo;
 import org.zjvis.dp.data.lineage.data.TableLineageInfo;
 import org.zjvis.dp.data.lineage.enums.SQLType;
+import org.zjvis.dp.data.lineage.enums.TableChangeType;
 import org.zjvis.dp.data.lineage.exception.DataLineageException;
+import org.zjvis.dp.data.lineage.parser.ast.AlterTableQuery;
 import org.zjvis.dp.data.lineage.parser.ast.CreateTableQuery;
 import org.zjvis.dp.data.lineage.parser.ast.DataClause.ClauseType;
 import org.zjvis.dp.data.lineage.parser.ast.INode;
@@ -97,6 +101,8 @@ public class DataLineageParser {
         return iNode instanceof SelectUnionQuery;
     }
 
+
+
     public boolean isContainLimit(String sqlType, String sql) {
         INode iNode = astParserFactory.createAstParser(sqlType).parse(sql);
         if(!(iNode instanceof SelectUnionQuery)) {
@@ -152,6 +158,55 @@ public class DataLineageParser {
             return Lists.newArrayList();
         }
         return tableLineageInfo.getSourceTables();
+    }
+
+    public TableChangeInfo getTableChangeInfo(String sqlType, String sql, String defaultDatabase) {
+        INode iNode = astParserFactory.createAstParser(sqlType).parse(sql);
+        if (iNode instanceof InsertQuery) {
+            InsertQuery insertQuery = (InsertQuery) iNode;
+            TableIdentifier tableIdentifier = insertQuery.getTableIdentifier();
+            String databaseName = defaultDatabase;
+            if (Objects.nonNull(tableIdentifier.getDatabase())
+                    && StringUtils.isNotBlank(tableIdentifier.getDatabase().getName())) {
+                databaseName = tableIdentifier.getDatabase().getName();
+            }
+            return TableChangeInfo.builder()
+                    .tableChangeType(TableChangeType.INSERT.name())
+                    .tableName(tableIdentifier.getName())
+                    .databaseName(databaseName)
+                    .build();
+        }
+
+        if (iNode instanceof AlterTableQuery) {
+            AlterTableQuery alterTableQuery = (AlterTableQuery) iNode;
+            TableIdentifier tableIdentifier = alterTableQuery.getIdentifier();
+            String databaseName = defaultDatabase;
+            if (Objects.nonNull(tableIdentifier.getDatabase())
+                    && StringUtils.isNotBlank(tableIdentifier.getDatabase().getName())) {
+                databaseName = tableIdentifier.getDatabase().getName();
+            }
+            return TableChangeInfo.builder()
+                    .tableChangeType(TableChangeType.ALTER.name())
+                    .tableName(tableIdentifier.getName())
+                    .databaseName(databaseName)
+                    .build();
+        }
+
+        if (iNode instanceof CreateTableQuery) {
+            CreateTableQuery createTableQuery = (CreateTableQuery) iNode;
+            TableIdentifier tableIdentifier = createTableQuery.getIdentifier();
+            String databaseName = defaultDatabase;
+            if (Objects.nonNull(tableIdentifier.getDatabase())
+                    && StringUtils.isNotBlank(tableIdentifier.getDatabase().getName())) {
+                databaseName = tableIdentifier.getDatabase().getName();
+            }
+            return TableChangeInfo.builder()
+                    .tableChangeType(TableChangeType.CREATE.name())
+                    .tableName(tableIdentifier.getName())
+                    .databaseName(databaseName)
+                    .build();
+        }
+        return null;
     }
 
 }
