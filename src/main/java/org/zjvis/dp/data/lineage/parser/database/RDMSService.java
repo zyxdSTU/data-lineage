@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -23,6 +24,7 @@ import org.zjvis.dp.data.lineage.constant.DatabaseConstant;
 import org.zjvis.dp.data.lineage.data.ColumnInfo;
 import org.zjvis.dp.data.lineage.data.DatabaseConfig;
 import org.zjvis.dp.data.lineage.data.DatabaseNameInfo;
+import org.zjvis.dp.data.lineage.enums.DataType;
 import org.zjvis.dp.data.lineage.exception.DataLineageException;
 
 /**
@@ -167,5 +169,15 @@ public abstract class RDMSService implements DatabaseService {
     @Override
     public List<String> getAllSchema(DatabaseConfig databaseConfig, String databaseName) {
         return null;
+    }
+
+    @Override
+    public String dataTypeConvert(String dataType) {
+        Map<String, String> dataTypeMap = getDataTypeMap();
+        if(dataTypeMap.containsKey(dataType)) {
+            return dataTypeMap.get(dataType);
+        } else {
+            return DataType.UNKNOWN.name();
+        }
     }
 }

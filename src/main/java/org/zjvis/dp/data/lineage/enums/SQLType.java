@@ -12,5 +12,7 @@ import lombok.Getter;
 public enum SQLType {
     CLICKHOUSE,
 
-    MYSQL;
+    MYSQL,
+
+    POSTGRES;
 }

@@ -3,6 +3,7 @@ package org.zjvis.dp.data.lineage.parser.database;
 import com.alibaba.fastjson.JSONArray;
 import java.sql.Connection;
 import java.util.List;
+import java.util.Map;
 import org.zjvis.dp.data.lineage.data.ColumnInfo;
 import org.zjvis.dp.data.lineage.data.DatabaseConfig;
 
@@ -43,4 +44,8 @@ public interface DatabaseService {
      * @return
      */
     List<String> getAllSchema(DatabaseConfig databaseConfig, String databaseName);
+
+    Map<String, String> getDataTypeMap();
+
+    String dataTypeConvert(String dataType);
 }
