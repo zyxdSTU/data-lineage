@@ -746,16 +746,46 @@ public class AstVisitor<T> {
     }
 
     public T visitFunctionColumnExpr(ColumnExpr expr) {
-        if (null != expr && expr instanceof FunctionColumnExpr) {
-            FunctionColumnExpr functionColumnExpr = (FunctionColumnExpr) expr;
-            if (null != functionColumnExpr.getName()) {
-                visitIdentifier(functionColumnExpr.getName());
+        FunctionColumnExpr functionColumnExpr = (FunctionColumnExpr) expr;
+
+        if (null != functionColumnExpr.getParams()) {
+            for (ColumnExpr exprElement : functionColumnExpr.getParams()) {
+                if(exprElement instanceof  FunctionColumnExpr) {
+                    visitFunctionColumnExprLoop((FunctionColumnExpr) exprElement);
+                } else {
+                    visitColumnExpr(exprElement);
+                }
             }
-            if (null != functionColumnExpr.getParams()) {
-                visitColumnExprList(functionColumnExpr.getParams());
+        }
+        if (null != functionColumnExpr.getArgs()) {
+            for (ColumnExpr exprElement : functionColumnExpr.getArgs()) {
+                if(exprElement instanceof  FunctionColumnExpr) {
+                    visitFunctionColumnExprLoop((FunctionColumnExpr) exprElement);
+                } else {
+                    visitColumnExpr(exprElement);
+                }
             }
-            if (null != functionColumnExpr.getArgs()) {
-                visitColumnExprList(functionColumnExpr.getArgs());
+        }
+        return null;
+    }
+
+    public T visitFunctionColumnExprLoop(FunctionColumnExpr functionColumnExpr) {
+        if (null != functionColumnExpr.getParams()) {
+            for (ColumnExpr exprElement : functionColumnExpr.getParams()) {
+                if(exprElement instanceof  FunctionColumnExpr) {
+                    visitFunctionColumnExprLoop((FunctionColumnExpr) exprElement);
+                } else {
+                    visitColumnExpr(exprElement);
+                }
+            }
+        }
+        if (null != functionColumnExpr.getArgs()) {
+            for (ColumnExpr exprElement : functionColumnExpr.getArgs()) {
+                if(exprElement instanceof FunctionColumnExpr) {
+                    visitFunctionColumnExprLoop((FunctionColumnExpr) exprElement);
+                } else {
+                    visitColumnExpr(exprElement);
+                }
             }
         }
         return null;

@@ -34,6 +34,7 @@ public class ClickhouseService extends RDMSService {
             put("Date", DataType.DATE.name());
             put("DateTime", DataType.DATE.name());
             put("DateTime64", DataType.DATE.name());
+            put("Nullable(DateTime)", DataType.DATE.name());
         }
     };
 
