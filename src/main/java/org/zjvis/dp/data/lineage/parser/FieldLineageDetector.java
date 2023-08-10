@@ -111,7 +111,7 @@ public class FieldLineageDetector extends AstVisitor<Object> {
     private String sqlType;
 
     FieldLineageDetector(DatabaseConfig databaseConfig, String sqlType) {
-        this.defaultDatabase = databaseConfig.getDatabaseName();
+        this.defaultDatabase = Objects.isNull(databaseConfig) ? "default" : databaseConfig.getDatabaseName();
         this.databaseConfig = databaseConfig;
         this.sqlType = sqlType;
     }
@@ -123,6 +123,9 @@ public class FieldLineageDetector extends AstVisitor<Object> {
 
 
     public List<String> getFieldFromDatabase(TableInfo tableInfo) {
+        if(Objects.isNull(databaseConfig)) {
+            return Lists.newArrayList();
+        }
         DatabaseFactory databaseFactory = ApplicationContextGetBeanHelper.getBean(DatabaseFactory.class);
         DatabaseService databaseService = databaseFactory.createDatabaseService(sqlType);
         List<ColumnInfo> columnInfoList = databaseService.getAllFields(
@@ -586,6 +589,7 @@ public class FieldLineageDetector extends AstVisitor<Object> {
                     for(SelectLevelInfo selectLevelInfoElement : selectLevelInfoMap.values()) {
                         if(selectLevelInfo.getId().equals(selectLevelInfoElement.getParentId())) {
                             List<FieldInfo> fieldInfos = getAllFieldInfoWithAsterisk(selectLevelInfoElement);
+                            //替换表名
                             if(!TableInfo.isNull(fieldInfo.getTableInfo())) {
                                 for(FieldInfo element : fieldInfos) {
                                     element.setTableInfo(fieldInfo.getTableInfo());
@@ -595,7 +599,8 @@ public class FieldLineageDetector extends AstVisitor<Object> {
                                     }
                                 }
                             }
-                            result.addAll(getAllFieldInfoWithAsterisk(selectLevelInfoElement));
+                            fieldInfos.forEach(element->element.setSequenceNumber(fieldInfo.getSequenceNumber()));
+                            result.addAll(fieldInfos);
                         }
                     }
                 }

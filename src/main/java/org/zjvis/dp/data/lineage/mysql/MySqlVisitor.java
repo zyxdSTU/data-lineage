@@ -151,9 +151,10 @@ public class MySqlVisitor extends MySqlParserBaseVisitor {
     public Object visitSimpleId(SimpleIdContext ctx) {
         if (null != ctx.ID()) {
             return visit(ctx.ID());
+        } else {
+            //字段为关键词会触发
+            return new Identifier(ctx.getText());
         }
-
-        return null;
     }
 
 

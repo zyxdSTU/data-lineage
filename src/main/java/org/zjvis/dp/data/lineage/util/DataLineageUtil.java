@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.zjvis.dp.data.lineage.exception.DataLineageException;
 
 /**
@@ -63,5 +64,15 @@ public class DataLineageUtil {
         } else {
             throw  new DataLineageException("cast type failed, pls check");
         }
+    }
+
+    public static <T> List<T> deepCopyList(List<T> sourceList, Class<T> tClass) {
+        List<T> result = Lists.newArrayList();
+        for(T element : sourceList) {
+            T  target = tClass.newInstance();
+            BeanUtils.copyProperties(element, target);
+            result.add(target);
+        }
+        return result;
     }
 }

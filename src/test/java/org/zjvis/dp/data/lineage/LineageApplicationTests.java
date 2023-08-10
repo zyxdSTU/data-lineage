@@ -25,30 +25,64 @@ class LineageApplicationTests {
     }
 
     @Test
-    void testMysql() {
-        String sql = "INSERT INTO money_laundering_predict\n"
-                + "SELECT \n"
-                + "\tuser_id,\n"
-                + "\tcard_id,\n"
-                + "\tCASE \n"
-                + "\t\tWHEN is_multi_ip = 0 THEN 0\n"
-                + "\t\tWHEN is_night_trade = 0 THEN 0\n"
-                + "\t\tWHEN is_deposity_transfer = 0 THEN 0\n"
-                + "\t\tWHEN counterparty_num < 10 THEN 0\n"
-                + "\t\tWHEN trade_num < 20 THEN 0\n"
-                + "\t\tWHEN age_type != 'young' THEN 0\n"
-                + "\t\tWHEN job_type != 'student' THEN 0\n"
-                + "\t\tELSE 1\n"
-                + "\tEND\n"
-                + "FROM money_laundering_feature;";
+    void testClickhouse() {
+        String sql = "insert into student_school\n"
+                + "select \n"
+                + "    student.student_id,\n"
+                + "    student.student_name,\n"
+                + "    school_alias.school_id,\n"
+                + "    school_alias.school_name,\n"
+                + "    school_alias.school_tel\n"
+                + "from student\n"
+                + "global join (\n"
+                + "    select\n"
+                + "        school_id,\n"
+                + "        school_name,\n"
+                + "        school_tel\n"
+                + "    from \n"
+                + "    school\n"
+                + ") school_alias\n"
+                + "on student.school_id = school_alias.school_id;";
         DatabaseConfig databaseConfig = DatabaseConfig.builder()
                 .host("10.5.24.18")
                 .port(8124)
                 .username("bigdata")
                 .password("a123456")
-                .databaseName("4_5_819")
+                .databaseName("4_5_334")
                 .build();
         List<FieldLineageInfo> fieldLineageInfoList = dataLineageParser.processFieldLineageParse(SQLType.CLICKHOUSE.name(), sql, databaseConfig);
+        if(CollectionUtils.isNotEmpty(fieldLineageInfoList)) {
+            for(FieldLineageInfo fieldLineageInfo : fieldLineageInfoList) {
+                System.out.println(fieldLineageInfo);
+            }
+        }
+    }
+
+    @Test
+    void testMysql() {
+        String sql = "INSERT INTO student\n"
+                + "(student_id, student_name, school_id, school_name)\n"
+                + "SELECT \n"
+                + "\tstudent.student_id,\n"
+                + "\tstudent.student_name,\n"
+                + "\tschool.*\n"
+                + "FROM student\n"
+                + "JOIN (\n"
+                + "\tSELECT\n"
+                + "\t\tschool_id,\n"
+                + "\t\tschool_name\n"
+                + "\tFROM \n"
+                + "\t\tschool_test\n"
+                + ") school\n"
+                + "ON student.school_id = school.school_id;";
+        DatabaseConfig databaseConfig = DatabaseConfig.builder()
+                .host("10.5.24.98")
+                .port(3306)
+                .username("root")
+                .password("Zhejianglab@123")
+                .databaseName("test")
+                .build();
+        List<FieldLineageInfo> fieldLineageInfoList = dataLineageParser.processFieldLineageParse(SQLType.MYSQL.name(), sql, null);
         if(CollectionUtils.isNotEmpty(fieldLineageInfoList)) {
             for(FieldLineageInfo fieldLineageInfo : fieldLineageInfoList) {
                 System.out.println(fieldLineageInfo);
