@@ -66,12 +66,16 @@ public class DataLineageUtil {
         }
     }
 
-    public static <T> List<T> deepCopyList(List<T> sourceList, Class<T> tClass) {
+    public static <T> List<T> deepCopyList(List<T> sourceList, Class<T> tClass, String[] ignoreProperties) {
         List<T> result = Lists.newArrayList();
         for(T element : sourceList) {
-            T  target = tClass.newInstance();
-            BeanUtils.copyProperties(element, target);
-            result.add(target);
+            try {
+                T target = tClass.newInstance();
+                BeanUtils.copyProperties(element, target, ignoreProperties);
+                result.add(target);
+            } catch (IllegalAccessException | InstantiationException e) {
+                throw new DataLineageException("deep copy list failed");
+            }
         }
         return result;
     }

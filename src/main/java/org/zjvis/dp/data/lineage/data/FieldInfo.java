@@ -84,8 +84,15 @@ public class FieldInfo {
 
 
     public static FieldInfo copy(FieldInfo fieldInfo) {
+        TableInfo tableInfo = null;
+        if(Objects.nonNull(fieldInfo.getTableInfo())) {
+            tableInfo = TableInfo.builder()
+                    .tableName(fieldInfo.getTableInfo().getTableName())
+                    .databaseName(fieldInfo.getTableInfo().getDatabaseName())
+                    .build();
+        }
         return FieldInfo.builder()
-                .tableInfo(fieldInfo.getTableInfo())
+                .tableInfo(tableInfo)
                 .fieldName(fieldInfo.getFieldName())
                 .isAsteriskColumn(fieldInfo.isAsteriskColumn())
                 .sequenceNumber(fieldInfo.getSequenceNumber())

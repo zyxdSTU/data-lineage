@@ -1,5 +1,6 @@
 package org.zjvis.dp.data.lineage.parser;
 
+import static org.zjvis.dp.data.lineage.util.DataLineageUtil.deepCopyList;
 import static org.zjvis.dp.data.lineage.util.DataLineageUtil.distinctByKey;
 
 import com.google.common.cache.Cache;
@@ -26,7 +27,6 @@ import org.zjvis.dp.data.lineage.data.FieldInfo;
 import org.zjvis.dp.data.lineage.data.FieldLineageInfo;
 import org.zjvis.dp.data.lineage.data.SelectLevelInfo;
 import org.zjvis.dp.data.lineage.data.TableInfo;
-import org.zjvis.dp.data.lineage.enums.SQLType;
 import org.zjvis.dp.data.lineage.exception.DataLineageException;
 import org.zjvis.dp.data.lineage.parser.ast.ColumnIdentifier;
 import org.zjvis.dp.data.lineage.parser.ast.FromClause;
@@ -41,7 +41,6 @@ import org.zjvis.dp.data.lineage.parser.ast.expr.ColumnExpr;
 import org.zjvis.dp.data.lineage.parser.ast.expr.IdentifierColumnExpr;
 import org.zjvis.dp.data.lineage.parser.ast.expr.JoinExpr;
 import org.zjvis.dp.data.lineage.parser.ast.expr.TableExpr;
-import org.zjvis.dp.data.lineage.parser.database.ClickhouseService;
 import org.zjvis.dp.data.lineage.parser.database.DatabaseFactory;
 import org.zjvis.dp.data.lineage.parser.database.DatabaseService;
 import org.zjvis.dp.data.lineage.util.ApplicationContextGetBeanHelper;
@@ -588,7 +587,14 @@ public class FieldLineageDetector extends AstVisitor<Object> {
                 } else {
                     for(SelectLevelInfo selectLevelInfoElement : selectLevelInfoMap.values()) {
                         if(selectLevelInfo.getId().equals(selectLevelInfoElement.getParentId())) {
-                            List<FieldInfo> fieldInfos = getAllFieldInfoWithAsterisk(selectLevelInfoElement);
+                            //从子层拿到的fieldInfoList必须进行深copy,包括relatedFieldInfoList
+                            List<FieldInfo> fieldInfos = deepCopyList(
+                                    getAllFieldInfoWithAsterisk(selectLevelInfoElement),
+                                    FieldInfo.class,
+                                    new String[]{"relatedFieldInfoList"}
+                            );
+                           fieldInfos.forEach(element -> element.setRelatedFieldInfoList(Lists.newArrayList(FieldInfo.copy(element))));
+
                             //替换表名
                             if(!TableInfo.isNull(fieldInfo.getTableInfo())) {
                                 for(FieldInfo element : fieldInfos) {
