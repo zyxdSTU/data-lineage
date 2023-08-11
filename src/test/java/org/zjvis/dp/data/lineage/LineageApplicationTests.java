@@ -60,21 +60,14 @@ class LineageApplicationTests {
 
     @Test
     void testMysql() {
-        String sql = "INSERT INTO student\n"
-                + "(student_id, student_name, school_id, school_name)\n"
-                + "SELECT \n"
-                + "\tstudent.student_id,\n"
-                + "\tstudent.student_name,\n"
-                + "\tschool.*\n"
-                + "FROM student\n"
-                + "JOIN (\n"
-                + "\tSELECT\n"
-                + "\t\tschool_id,\n"
-                + "\t\tschool_name\n"
-                + "\tFROM \n"
-                + "\t\tschool_test\n"
-                + ") school\n"
-                + "ON student.school_id = school.school_id;";
+        String sql = "INSERT INTO student(student_id)\n"
+                + "SELECT\n"
+                + "\tcase \n"
+                + "\t\tWHEN student_id > 10 THEN 0\n"
+                + "\t\tWHEN student_id <= 10 THEN 1\n"
+                + "\tELSE 2\n"
+                + "\tEND\n"
+                + "FROM student_test;";
         DatabaseConfig databaseConfig = DatabaseConfig.builder()
                 .host("10.5.24.98")
                 .port(3306)

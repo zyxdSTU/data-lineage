@@ -3,24 +3,27 @@ package org.zjvis.dp.data.lineage.mysql;
 import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.AtomTableItemContext;
+import org.zjvis.dp.data.lineage.mysql.MySqlParser.BinaryComparisonPredicateContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.BitExpressionAtomContext;
+import org.zjvis.dp.data.lineage.mysql.MySqlParser.CaseFuncAlternativeContext;
+import org.zjvis.dp.data.lineage.mysql.MySqlParser.CaseFunctionCallContext;
+import org.zjvis.dp.data.lineage.mysql.MySqlParser.ConstantExpressionAtomContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.ExpressionAtomPredicateContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.ExtractFunctionCallContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.FromClauseContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.FullColumnNameExpressionAtomContext;
+import org.zjvis.dp.data.lineage.mysql.MySqlParser.FunctionArgContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.FunctionArgsContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.InsertStatementContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.InsertStatementValueContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.JoinPartContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.JsonExpressionAtomContext;
-import org.zjvis.dp.data.lineage.mysql.MySqlParser.LogicalExpressionContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.MathExpressionAtomContext;
-import org.zjvis.dp.data.lineage.mysql.MySqlParser.NotExpressionContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.ParenthesisSelectContext;
-import org.zjvis.dp.data.lineage.mysql.MySqlParser.PredicateExpressionContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.QueryExpressionContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.QueryExpressionNointoContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.QuerySpecificationContext;
@@ -34,7 +37,6 @@ import org.zjvis.dp.data.lineage.mysql.MySqlParser.SelectFunctionElementContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.SelectStarElementContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.SimpleSelectContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.SpecificFunctionCallContext;
-import org.zjvis.dp.data.lineage.mysql.MySqlParser.SqlStatementContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.SqlStatementsContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.SubqueryTableItemContext;
 import org.zjvis.dp.data.lineage.mysql.MySqlParser.TableSourceBaseContext;
@@ -263,7 +265,6 @@ public class MySqlCoreVisitor extends MySqlVisitor{
         }
     }
 
-
     @Override
     public Object visitSelectExpressionElement(SelectExpressionElementContext ctx) {
         List<ColumnIdentifier> columnIdentifiers = DataLineageUtil.castList(visit(ctx.expression()), ColumnIdentifier.class);
@@ -310,6 +311,54 @@ public class MySqlCoreVisitor extends MySqlVisitor{
     }
 
 
+    @Override
+    public Object visitSpecificFunctionCall(SpecificFunctionCallContext ctx) {
+        return visit(ctx.specificFunction());
+    }
+
+
+    @Override
+    public Object visitCaseFunctionCall(CaseFunctionCallContext ctx) {
+        List<ColumnIdentifier> columnIdentifiers = Lists.newArrayList();
+        if(CollectionUtils.isNotEmpty(ctx.caseFuncAlternative())) {
+            columnIdentifiers.addAll(ctx.caseFuncAlternative().stream()
+                    .map(this::visit)
+                    .filter(Objects::nonNull)
+                    .map(element -> DataLineageUtil.castList(element, ColumnIdentifier.class))
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList())
+            );
+        }
+
+        if(Objects.nonNull(ctx.functionArg())) {
+            Object object = visit(ctx.functionArg());
+            if(Objects.nonNull(object)) {
+                columnIdentifiers.addAll(DataLineageUtil.castList(object, ColumnIdentifier.class));
+            }
+        }
+        List<ColumnExpr> columnExprList = columnIdentifiers.stream()
+                .map(ColumnExpr::createIdentifier)
+                .collect(Collectors.toList());
+
+        return ColumnExpr.createFunction(new Identifier("case"), null, columnExprList);
+    }
+
+
+    @Override
+    public Object visitCaseFuncAlternative(CaseFuncAlternativeContext ctx) {
+        if(CollectionUtils.isNotEmpty(ctx.functionArg())) {
+            return ctx.functionArg().stream()
+                    .map(this::visit)
+                    .filter(Objects::nonNull)
+                    .map(element -> DataLineageUtil.castList(element, ColumnIdentifier.class))
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+        } else {
+            return null;
+        }
+    }
+
+
 
     @Override
     public Object visitScalarFunctionCall(ScalarFunctionCallContext ctx) {
@@ -330,6 +379,7 @@ public class MySqlCoreVisitor extends MySqlVisitor{
             result.addAll(
                     ctx.fullColumnName().stream()
                             .map(this::visit)
+                            .filter(Objects::nonNull)
                             .map(element -> (ColumnIdentifier) element)
                             .collect(Collectors.toList())
             );
@@ -339,8 +389,10 @@ public class MySqlCoreVisitor extends MySqlVisitor{
             result.addAll(
                     ctx.functionCall().stream()
                             .map(this::visit)
+                            .filter(Objects::nonNull)
                             .map(element -> (FunctionColumnExpr) element)
                             .map(FunctionColumnExpr::getArgs)
+                            .filter(CollectionUtils::isNotEmpty)
                             .flatMap(Collection::stream)
                             .map(element -> (IdentifierColumnExpr)element)
                             .map(IdentifierColumnExpr::getIdentifier)
@@ -363,11 +415,57 @@ public class MySqlCoreVisitor extends MySqlVisitor{
 
 
     @Override
+    public Object visitFunctionArg(FunctionArgContext ctx) {
+        List<ColumnIdentifier> result = Lists.newArrayList();
+        if(Objects.nonNull(ctx.fullColumnName())) {
+            result.add((ColumnIdentifier)visit(ctx.fullColumnName()));
+        }
+
+        if(Objects.nonNull(ctx.functionCall())) {
+            Object object = visit(ctx.functionCall());
+            if(Objects.nonNull(object)) {
+                FunctionColumnExpr functionColumnExpr = (FunctionColumnExpr) object;
+                List<IdentifierColumnExpr> identifierColumnExprList =
+                        DataLineageUtil.castList(functionColumnExpr.getArgs(), IdentifierColumnExpr.class);
+                if (CollectionUtils.isNotEmpty(identifierColumnExprList)) {
+                    result.addAll(
+                            identifierColumnExprList.stream()
+                                    .map(IdentifierColumnExpr::getIdentifier)
+                                    .collect(Collectors.toList())
+                    );
+                }
+            }
+
+        }
+
+        if(Objects.nonNull(ctx.expression())) {
+            Object object = visit(ctx.expression());
+            if(Objects.nonNull(object)) {
+                result.addAll(DataLineageUtil.castList(object, ColumnIdentifier.class));
+            }
+        }
+
+        return CollectionUtils.isEmpty(result) ? null : result;
+    }
+
+    @Override
     public Object visitExpressionAtomPredicate(ExpressionAtomPredicateContext ctx) {
         return visit(ctx.expressionAtom());
     }
 
 
+    @Override
+    public Object visitBinaryComparisonPredicate(BinaryComparisonPredicateContext ctx) {
+        if(CollectionUtils.isNotEmpty(ctx.predicate())) {
+            return ctx.predicate().stream()
+                    .map(this::visit)
+                    .filter(Objects::nonNull)
+                    .map(element -> DataLineageUtil.castList(element, ColumnIdentifier.class))
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+        }
+        return null;
+    }
 
     @Override
     public Object visitFullColumnNameExpressionAtom(FullColumnNameExpressionAtomContext ctx) {
@@ -388,6 +486,11 @@ public class MySqlCoreVisitor extends MySqlVisitor{
     }
 
 
+    @Override
+    public Object visitConstantExpressionAtom(ConstantExpressionAtomContext ctx) {
+        //常量不关注
+        return null;
+    }
 
     @Override
     public Object visitBitExpressionAtom(BitExpressionAtomContext ctx) {
