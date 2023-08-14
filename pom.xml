@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.zjvis.dp.data</groupId>
+  <groupId>io.github.zyxdSTU</groupId>
   <artifactId>data-lineage</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <name>data-lineage</name>
@@ -107,17 +107,6 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
-  <distributionManagement>
-    <repository>
-      <id>maven-releases</id>
-      <url>http://10.5.24.35:8081/repository/maven-releases/</url>
-    </repository>
-    <snapshotRepository>
-      <id>maven-snapshots</id>
-      <url>http://10.5.24.35:8081/repository/maven-snapshots/</url>
-    </snapshotRepository>
-  </distributionManagement>
 
   <build>
     <plugins>
