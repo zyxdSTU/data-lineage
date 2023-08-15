@@ -42,3 +42,14 @@ from (select code
          left join
          (select code, value from 2_5_221.s_gender) AS t1
          on t0.code = t1.code;
+
+--情况四
+INSERT INTO student
+(id, name, school_name)
+SELECT
+    student_test.id,
+    student_test.name,
+    school.name
+from student_test
+    global join school
+on student_test.school_id = school.id;

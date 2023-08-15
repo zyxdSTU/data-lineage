@@ -20,6 +20,11 @@ public class TableInfo {
     String tableName;
     String databaseName;
 
+    /**
+     * 库名默认为default
+     */
+    public static final String DEFAULT_DATABASE_NAME = "default";
+
     public boolean isBlank() {
         return StringUtils.isEmpty(tableName);
     }
@@ -51,11 +56,18 @@ public class TableInfo {
         TableInfo otherTableInfo = (TableInfo) otherObject;
 
         //数据库名是否一致
-        boolean isAllDatabaseNull = StringUtils.isBlank(otherTableInfo.getDatabaseName())
-                && StringUtils.isBlank(this.getDatabaseName());
+        boolean isOtherDatabaseNull = StringUtils.isBlank(otherTableInfo.getDatabaseName()) ||
+                StringUtils.equals(otherTableInfo.getDatabaseName(), DEFAULT_DATABASE_NAME);
+
+        boolean isDatabaseNull = StringUtils.isBlank(this.getDatabaseName()) ||
+                StringUtils.equals(this.getDatabaseName(), DEFAULT_DATABASE_NAME);
+
+        boolean isAllDatabaseNull = isOtherDatabaseNull && isDatabaseNull;
 
         boolean isAllDatabaseNotNull = StringUtils.isNotBlank(otherTableInfo.getDatabaseName())
-                && StringUtils.isNotBlank(this.getDatabaseName());
+                && !StringUtils.equals(otherTableInfo.getDatabaseName(), DEFAULT_DATABASE_NAME)
+                && StringUtils.isNotBlank(this.getDatabaseName())
+                && !StringUtils.equals(this.getDatabaseName(),DEFAULT_DATABASE_NAME);
 
         if(!(isAllDatabaseNull || isAllDatabaseNotNull)) {
             return false;

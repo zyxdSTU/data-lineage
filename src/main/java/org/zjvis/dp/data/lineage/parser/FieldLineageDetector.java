@@ -673,8 +673,15 @@ public class FieldLineageDetector extends AstVisitor<Object> {
                             }
 
                             if(!TableInfo.isNull(subElement.getTableInfo())) {
-                                if(!subElement.getTableInfo().getTableName().equals(selectLevelInfo.getFromTable().getTableName())) {
+                                if(!subElement.getTableInfo().equals(selectLevelInfo.getFromTable())) {
                                     continue;
+                                }
+
+                                //情况clickhouse.sql:46
+                                if(!TableInfo.isNull(targetFieldInfo.getTableInfo())) {
+                                    if (!subElement.getTableInfo().equals(targetFieldInfo.getTableInfo())) {
+                                        continue;
+                                    }
                                 }
                             }
                             sourceFieldInfoList.add(FieldInfo.builder()

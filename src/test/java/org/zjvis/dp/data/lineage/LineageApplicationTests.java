@@ -10,13 +10,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.zjvis.dp.data.lineage.data.DatabaseConfig;
 import org.zjvis.dp.data.lineage.data.FieldLineageInfo;
 import org.zjvis.dp.data.lineage.enums.SQLType;
-import org.zjvis.dp.data.lineage.parser.AstParser;
-import org.zjvis.dp.data.lineage.parser.AstParserFactory;
 import org.zjvis.dp.data.lineage.parser.DataLineageParser;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
 class LineageApplicationTests {
+
     @Resource
     private DataLineageParser dataLineageParser;
 
@@ -50,9 +49,10 @@ class LineageApplicationTests {
                 .password("a123456")
                 .databaseName("4_5_334")
                 .build();
-        List<FieldLineageInfo> fieldLineageInfoList = dataLineageParser.processFieldLineageParse(SQLType.CLICKHOUSE.name(), sql, databaseConfig);
-        if(CollectionUtils.isNotEmpty(fieldLineageInfoList)) {
-            for(FieldLineageInfo fieldLineageInfo : fieldLineageInfoList) {
+        List<FieldLineageInfo> fieldLineageInfoList = dataLineageParser.processFieldLineageParse(SQLType.CLICKHOUSE.name(), sql,
+                databaseConfig);
+        if (CollectionUtils.isNotEmpty(fieldLineageInfoList)) {
+            for (FieldLineageInfo fieldLineageInfo : fieldLineageInfoList) {
                 System.out.println(fieldLineageInfo);
             }
         }
@@ -60,14 +60,15 @@ class LineageApplicationTests {
 
     @Test
     void testMysql() {
-        String sql = "INSERT INTO student(student_id)\n"
+        String sql = "INSERT INTO student\n"
+                + "(id, name, school_name)\n"
                 + "SELECT\n"
-                + "\tcase \n"
-                + "\t\tWHEN student_id > 10 THEN 0\n"
-                + "\t\tWHEN student_id <= 10 THEN 1\n"
-                + "\tELSE 2\n"
-                + "\tEND\n"
-                + "FROM student_test;";
+                + "\tstudent_test.id,\n"
+                + "\tstudent_test.name,\n"
+                + "\tschool.name\n"
+                + "from student_test\n"
+                + "global join school\n"
+                + "on student_test.school_id = school.id;";
         DatabaseConfig databaseConfig = DatabaseConfig.builder()
                 .host("10.5.24.98")
                 .port(3306)
@@ -76,8 +77,8 @@ class LineageApplicationTests {
                 .databaseName("test")
                 .build();
         List<FieldLineageInfo> fieldLineageInfoList = dataLineageParser.processFieldLineageParse(SQLType.MYSQL.name(), sql, null);
-        if(CollectionUtils.isNotEmpty(fieldLineageInfoList)) {
-            for(FieldLineageInfo fieldLineageInfo : fieldLineageInfoList) {
+        if (CollectionUtils.isNotEmpty(fieldLineageInfoList)) {
+            for (FieldLineageInfo fieldLineageInfo : fieldLineageInfoList) {
                 System.out.println(fieldLineageInfo);
             }
         }
